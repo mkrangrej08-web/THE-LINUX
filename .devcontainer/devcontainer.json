@@ -1,4 +1,4 @@
 {
-  "name": "Linux Desktop Tailscale",
-  "postStartCommand": "bash .devcontainer/startup.sh &"
+  "name": "Linux Desktop",
+  "postStartCommand": "nohup bash .devcontainer/startup.sh > /tmp/startup.log 2>&1 &"
 }
