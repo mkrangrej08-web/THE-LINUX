@@ -7,17 +7,19 @@ jobs:
   start:
     runs-on: ubuntu-latest
     steps:
-      - name: Start Codespace and Run Services
+      - name: Start Codespace & Services
         env:
           GH_TOKEN: ${{ secrets.CODESPACE_TOKEN }}
         run: |
           CS_NAME=$(gh api /user/codespaces --jq '.codespaces[] | select(.repository.full_name=="mkrangrej08-web/THE-LINUX") | .name')
-          echo "Starting codespace: $CS_NAME"
-          gh api --method POST /user/codespaces/$CS_NAME/start
+          echo "Target Codespace: $CS_NAME"
           
-          echo "Waiting 15 seconds for boot..."
-          sleep 15
+          # अगर बंद है तो स्टार्ट करेगा, पहले से चालू है तो एरर इग्नोर करेगा
+          gh api --method POST /user/codespaces/$CS_NAME/start || true
           
-          echo "Starting Tailscale and VNC..."
-          gh codespace ssh -c "$CS_NAME" -- "bash /workspaces/THE-LINUX/start-desktop-vnc.sh > /dev/null 2>&1 &" || true
-          echo "Setup Complete!"
+          echo "Waiting 10 seconds..."
+          sleep 10
+          
+          # Tailscale और VNC को एक्टिवेट करने का ट्रिगर
+          gh codespace ssh -c "$CS_NAME" -- "nohup bash /workspaces/THE-LINUX/start-desktop-vnc.sh > /dev/null 2>&1 &" || true
+          echo "Everything configured successfully!"
