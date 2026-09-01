@@ -11,5 +11,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CODESPACE_TOKEN }}
         run: |
-          gh codespace start --repo mkrangrej08-web/THE-LINUX
+          CS_NAME=$(gh api /user/codespaces --jq '.codespaces[] | select(.repository.full_name=="mkrangrej08-web/THE-LINUX") | .name')
+          echo "Starting codespace: $CS_NAME"
+          gh api --method POST /user/codespaces/$CS_NAME/start
           echo "Codespace successfully started!"
