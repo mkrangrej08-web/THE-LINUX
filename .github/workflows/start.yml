@@ -7,11 +7,17 @@ jobs:
   start:
     runs-on: ubuntu-latest
     steps:
-      - name: Start Codespace
+      - name: Start Codespace and Run Services
         env:
           GH_TOKEN: ${{ secrets.CODESPACE_TOKEN }}
         run: |
           CS_NAME=$(gh api /user/codespaces --jq '.codespaces[] | select(.repository.full_name=="mkrangrej08-web/THE-LINUX") | .name')
           echo "Starting codespace: $CS_NAME"
           gh api --method POST /user/codespaces/$CS_NAME/start
-          echo "Codespace successfully started!"
+          
+          echo "Waiting 15 seconds for boot..."
+          sleep 15
+          
+          echo "Starting Tailscale and VNC..."
+          gh codespace ssh -c "$CS_NAME" -- "bash /workspaces/THE-LINUX/start-desktop-vnc.sh > /dev/null 2>&1 &" || true
+          echo "Setup Complete!"
