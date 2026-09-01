@@ -1,0 +1,16 @@
+name: Start Codespace
+
+on:
+  workflow_dispatch:
+
+jobs:
+  start:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Start Codespace
+        env:
+          GH_TOKEN: ${{ secrets.CODESPACE_TOKEN }}
+        run: |
+          gh codespace start -r mkrangrej08-web/THE-LINUX
+          echo "Codespace Started Successfully!"
+
