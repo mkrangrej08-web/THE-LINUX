@@ -1,0 +1,4 @@
+{
+  "name": "Linux Desktop Tailscale",
+  "postStartCommand": "bash .devcontainer/startup.sh &"
+}
