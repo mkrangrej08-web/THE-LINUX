@@ -7,19 +7,22 @@ jobs:
   start:
     runs-on: ubuntu-latest
     steps:
-      - name: Start Codespace & Services
+      - name: Restart and Connect Tailscale
         env:
           GH_TOKEN: ${{ secrets.CODESPACE_TOKEN }}
         run: |
           CS_NAME=$(gh api /user/codespaces --jq '.codespaces[] | select(.repository.full_name=="mkrangrej08-web/THE-LINUX") | .name')
           echo "Target Codespace: $CS_NAME"
+
+          # 1. Codespace को रिफ्रेश करने के लिए स्टॉप और स्टार्ट करें
+          gh api --method POST /user/codespaces/$CS_NAME/stop || true
+          sleep 5
+          gh api --method POST /user/codespaces/$CS_NAME/start
           
-          # अगर बंद है तो स्टार्ट करेगा, पहले से चालू है तो एरर इग्नोर करेगा
-          gh api --method POST /user/codespaces/$CS_NAME/start || true
+          echo "Waiting 20 seconds for container initialization..."
+          sleep 20
+
+          # 2. Tailscale और VNC को जबरन कमांड भेजकर स्टार्ट करें
+          gh codespace ssh -c "$CS_NAME" -- "sudo tailscaled --tun=userspace-networking --socks5-server=localhost:1055 & sleep 3 && sudo tailscale up --authkey=tskey-auth-kp4D8uZ79V11CNTRL-cwVtEnFQAEcnJsRVMK4YDcDrrygXERVa --hostname=codespace-desktop && bash /workspaces/THE-LINUX/start-desktop-vnc.sh &" || true
           
-          echo "Waiting 10 seconds..."
-          sleep 10
-          
-          # Tailscale और VNC को एक्टिवेट करने का ट्रिगर
-          gh codespace ssh -c "$CS_NAME" -- "nohup bash /workspaces/THE-LINUX/start-desktop-vnc.sh > /dev/null 2>&1 &" || true
-          echo "Everything configured successfully!"
+          echo "Services started successfully!"
