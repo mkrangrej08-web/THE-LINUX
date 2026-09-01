@@ -11,6 +11,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CODESPACE_TOKEN }}
         run: |
-          gh codespace start -r mkrangrej08-web/THE-LINUX
-          echo "Codespace Started Successfully!"
-
+          gh codespace start --repo mkrangrej08-web/THE-LINUX
+          echo "Codespace successfully started!"
