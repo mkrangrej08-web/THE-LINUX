@@ -7,22 +7,29 @@ jobs:
   start:
     runs-on: ubuntu-latest
     steps:
-      - name: Restart and Connect Tailscale
+      - name: Launch Codespace and Services
         env:
           GH_TOKEN: ${{ secrets.CODESPACE_TOKEN }}
         run: |
-          CS_NAME=$(gh api /user/codespaces --jq '.codespaces[] | select(.repository.full_name=="mkrangrej08-web/THE-LINUX") | .name')
+          set +e
+          CS_NAME="jubilant-umbrella-vpqgxxgrprgxhxg77"
           echo "Target Codespace: $CS_NAME"
 
-          # 1. Codespace को रिफ्रेश करने के लिए स्टॉप और स्टार्ट करें
-          gh api --method POST /user/codespaces/$CS_NAME/stop || true
-          sleep 5
-          gh api --method POST /user/codespaces/$CS_NAME/start
+          # 1. स्टार्ट सिग्नल भेजें (अगर पहले से चालू है तो एरर इग्नोर होगा)
+          gh api --method POST /user/codespaces/$CS_NAME/start > /dev/null 2>&1
           
-          echo "Waiting 20 seconds for container initialization..."
-          sleep 20
+          echo "Waiting 15 seconds for system ready..."
+          sleep 15
 
-          # 2. Tailscale और VNC को जबरन कमांड भेजकर स्टार्ट करें
-          gh codespace ssh -c "$CS_NAME" -- "sudo tailscaled --tun=userspace-networking --socks5-server=localhost:1055 & sleep 3 && sudo tailscale up --authkey=tskey-auth-kp4D8uZ79V11CNTRL-cwVtEnFQAEcnJsRVMK4YDcDrrygXERVa --hostname=codespace-desktop && bash /workspaces/THE-LINUX/start-desktop-vnc.sh &" || true
-          
-          echo "Services started successfully!"
+          # 2. Codespace के अंदर टेलस्केल और VNC को एक्टिवेट करें
+          gh codespace ssh -c "$CS_NAME" -- bash -c '
+            sudo tailscaled --tun=userspace-networking --socks5-server=localhost:1055 > /tmp/ts.log 2>&1 &
+            sleep 3
+            sudo tailscale up --authkey="tskey-auth-kp4D8uZ79V11CNTRL-cwVtEnFQAEcnJsRVMK4YDcDrrygXERVa" --hostname="codespace-desktop" --accept-routes
+            if [ -f "/workspaces/THE-LINUX/start-desktop-vnc.sh" ]; then
+              bash /workspaces/THE-LINUX/start-desktop-vnc.sh > /tmp/vnc.log 2>&1 &
+            fi
+            echo "SUCCESS"
+          '
+
+          echo "Codespace and Tailscale are now Online!"
