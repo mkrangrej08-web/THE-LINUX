@@ -1,0 +1,22 @@
+name: Stop Codespace
+
+on:
+  workflow_dispatch:
+
+jobs:
+  stop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Stop the Running Codespace
+        env:
+          GH_TOKEN: ${{ secrets.CODESPACE_TOKEN }}
+        run: |
+          set +e
+          CS_NAME="jubilant-umbrella-vpqgxxgrprgxhxg77"
+          echo "Stopping Codespace: $CS_NAME"
+
+          # Codespace को बंद करने के लिए API कॉल
+          gh api --method POST /user/codespaces/$CS_NAME/stop
+          
+          echo "Codespace successfully stopped!"
+
